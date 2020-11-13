@@ -1,4 +1,4 @@
-package coredns_blocklist
+package blocklist
 
 import (
 	"sync"

@@ -1,20 +1,26 @@
-package coredns_blocklist
+package blocklist
 
 import (
 	"bytes"
 	"context"
 	golog "log"
-	"strings"
 	"testing"
 
 	"github.com/coredns/coredns/plugin/pkg/dnstest"
 	"github.com/coredns/coredns/plugin/test"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/miekg/dns"
 )
 
+func NextHandler() test.Handler {
+	return test.HandlerFunc(func(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
+		return r.Rcode, nil
+	})
+}
+
 func TestExample(t *testing.T) {
-	x := Blocklist{Next: test.ErrorHandler()}
+	x := Blocklist{Next: test.NextHandler(dns.RcodeSuccess, nil)}
 
 	b := &bytes.Buffer{}
 	golog.SetOutput(b)
@@ -25,13 +31,12 @@ func TestExample(t *testing.T) {
 	rec := dnstest.NewRecorder(&test.ResponseWriter{})
 
 	x.ServeDNS(ctx, rec, r)
-	if a := b.String(); !strings.Contains(a, "[INFO] plugin/blocklist: example") {
-		t.Errorf("Failed to print '%s', got %s", "[INFO] plugin/blocklist: example", a)
-	}
+
+	assert.Equal(t, dns.RcodeSuccess, rec.Rcode)
 }
 
 func TestBlockedDomain(t *testing.T) {
-	x := Blocklist{Next: test.ErrorHandler()}
+	x := Blocklist{Next: NextHandler(), domains: []string{"bad.domain."}}
 
 	b := &bytes.Buffer{}
 	golog.SetOutput(b)
@@ -43,7 +48,6 @@ func TestBlockedDomain(t *testing.T) {
 	rec := dnstest.NewRecorder(&test.ResponseWriter{})
 
 	x.ServeDNS(ctx, rec, r)
-	if a := b.String(); !strings.Contains(a, "[INFO] plugin/blocklist: example") {
-		t.Errorf("Failed to print '%s', got %s", "[INFO] plugin/blocklist: blocked bad.domain.", a)
-	}
+
+	assert.Equal(t, dns.RcodeNameError, rec.Rcode)
 }

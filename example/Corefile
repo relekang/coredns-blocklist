@@ -1,0 +1,9 @@
+. {
+  log
+  prometheus
+
+  blocklist https://mirror1.malwaredomains.com/files/justdomains
+  blocklist list.txt
+
+  forward . 1.1.1.1 1.0.0.1
+}

@@ -1,7 +1,8 @@
-package coredns_blocklist
+package blocklist
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
@@ -14,27 +15,38 @@ import (
 var log = clog.NewWithPlugin("blocklist")
 
 type Blocklist struct {
-	Next plugin.Handler
+	domains []string
+	Next    plugin.Handler
 }
 
 func (b Blocklist) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 	state := request.Request{W: w, Req: r}
 
 	if b.shouldBlock(state.Name()) {
-		blockCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
-
 		resp := new(dns.Msg)
 		resp.SetRcode(r, dns.RcodeNameError)
 		w.WriteMsg(resp)
 
-		return dns.RcodeNameError, nil
+		blockCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
+		log.Debugf("blocked %s", state.Name())
+
+		return plugin.NextOrFailure(b.Name(), b.Next, ctx, w, r)
 	}
 
 	return plugin.NextOrFailure(b.Name(), b.Next, ctx, w, r)
 }
 
 func (b Blocklist) shouldBlock(name string) bool {
-	return name == "bad.domain"
+	log.Debugf("shouldBlock(%s)", name)
+	if name == "localhost." {
+		return false
+	}
+	for _, domain := range b.domains {
+		if name == domain || name == fmt.Sprintf("%s.", domain) {
+			return true
+		}
+	}
+	return false
 }
 
 func (b Blocklist) Name() string { return "blocklist" }
