@@ -27,6 +27,7 @@ func loadBlockListFromUrl(c *caddy.Controller, name string) ([]string, error) {
 	domains, err := strings.Split(string(body), "\n"), nil
 	if err == nil {
 		log.Infof("Loaded %d domains from %s", len(domains), name)
+		domainCount.WithLabelValues(name).Set(float64(len(domains)))
 	}
 	return domains, err
 }
@@ -46,6 +47,7 @@ func loadBlockListFromFile(c *caddy.Controller, name string) ([]string, error) {
 	domains, err := strings.Split(string(content), "\n"), err
 	if err == nil {
 		log.Infof("Loaded %d domains from %s", len(domains), name)
+		domainCount.WithLabelValues(name).Set(float64(len(domains)))
 	}
 	return domains, err
 }

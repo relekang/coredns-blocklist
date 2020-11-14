@@ -16,4 +16,11 @@ var blockCount = promauto.NewCounterVec(prometheus.CounterOpts{
 	Help:      "Counter of blocks made.",
 }, []string{"server"})
 
+var domainCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
+	Namespace: plugin.Namespace,
+	Subsystem: "blocklist",
+	Name:      "blocklist_size",
+	Help:      "Number of blocked domains.",
+}, []string{"file"})
+
 var once sync.Once
