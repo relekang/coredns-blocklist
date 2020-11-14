@@ -1,3 +1,5 @@
+name: Create release from tag
+
 on:
   push:
     tags:
