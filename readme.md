@@ -47,4 +47,8 @@ See the [example/main.go](./example/main.go) for how to create a file that you
 can compile to get coredns with this plugin. This file will work with the
 coredns version defined in [go.mod](./go.mod).
 
+The example is bundled up with releases of on the [release page][] of this
+repository. There it can be downloaded prebuilt for a bunch of environments.
+
 [coredns]: https://coredns.io
+[release page]: https://github.com/relekang/coredns-blocklist/releases
