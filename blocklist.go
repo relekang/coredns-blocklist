@@ -2,7 +2,6 @@ package blocklist
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/metrics"
@@ -28,9 +27,15 @@ func (b Blocklist) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 		w.WriteMsg(resp)
 
 		blockCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
-		log.Debugf("blocked %s", state.Name())
+		log.Debugf(
+			"blocked \"%s IN %s %s\" from %s",
+			state.Type(),
+			state.Name(),
+			state.Proto(),
+			state.RemoteAddr(),
+		)
 
-		return plugin.NextOrFailure(b.Name(), b.Next, ctx, w, r)
+		return dns.RcodeNameError, nil
 	}
 
 	return plugin.NextOrFailure(b.Name(), b.Next, ctx, w, r)
@@ -42,7 +47,7 @@ func (b Blocklist) shouldBlock(name string) bool {
 		return false
 	}
 	for _, domain := range b.domains {
-		if name == domain || name == fmt.Sprintf("%s.", domain) {
+		if name == domain || name == domain+"." {
 			return true
 		}
 	}
