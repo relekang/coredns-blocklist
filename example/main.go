@@ -10,7 +10,7 @@ import (
 
 func init() {
 	dnsserver.Directives = append(
-		[]string{"blocklist"},
+		[]string{"log", "blocklist"},
 		dnsserver.Directives...,
 	)
 }
