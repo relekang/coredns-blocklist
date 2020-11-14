@@ -25,6 +25,7 @@ func TestSetupInvalidConfig(t *testing.T) {
 		"plugin/blocklist: To many arguments for blocklist.",
 	)
 }
+
 func TestSetupValidConfig(t *testing.T) {
 	c := caddy.NewTestController("dns", `blocklist example/list.txt`)
 	err := setup(c)

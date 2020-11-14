@@ -14,7 +14,7 @@ import (
 var log = clog.NewWithPlugin("blocklist")
 
 type Blocklist struct {
-	domains []string
+	domains map[string]bool
 	Next    plugin.Handler
 }
 
@@ -46,12 +46,8 @@ func (b Blocklist) shouldBlock(name string) bool {
 	if name == "localhost." {
 		return false
 	}
-	for _, domain := range b.domains {
-		if name == domain || name == domain+"." {
-			return true
-		}
-	}
-	return false
+	_, ok := b.domains[name]
+	return ok
 }
 
 func (b Blocklist) Name() string { return "blocklist" }

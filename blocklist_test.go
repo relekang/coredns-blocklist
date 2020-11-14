@@ -36,7 +36,7 @@ func TestExample(t *testing.T) {
 }
 
 func TestBlockedDomain(t *testing.T) {
-	x := Blocklist{Next: NextHandler(), domains: []string{"bad.domain."}}
+	x := Blocklist{Next: NextHandler(), domains: map[string]bool{"bad.domain.": true}}
 
 	b := &bytes.Buffer{}
 	golog.SetOutput(b)
