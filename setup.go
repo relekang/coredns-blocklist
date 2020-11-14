@@ -1,8 +1,10 @@
 package blocklist
 
 import (
+	"errors"
 	"io/ioutil"
 	"net/http"
+	"path/filepath"
 	"strings"
 
 	"github.com/coredns/caddy"
@@ -16,18 +18,18 @@ func setup(c *caddy.Controller) error {
 	var domains []string = []string{}
 	for c.Next() {
 
-		if !c.NextArg() {
-			return plugin.Error("blocklist", c.ArgErr())
-		}
+		var name string
+		c.Args(&name)
 
-		var list string
-		c.Args(&list)
+		if name == "" {
+			return plugin.Error("blocklist", errors.New("Missing url or path to blocklist."))
+		}
 
 		if c.NextArg() {
-			return plugin.Error("blocklist", c.ArgErr())
+			return plugin.Error("blocklist", errors.New("To many arguments for blocklist."))
 		}
 
-		loaded, err := loadBlockList(list)
+		loaded, err := loadBlockList(c, name)
 
 		if err != nil {
 			return plugin.Error("blocklist", err)
@@ -42,28 +44,43 @@ func setup(c *caddy.Controller) error {
 	return nil
 }
 
-func loadBlockList(list string) ([]string, error) {
-	log.Infof("Loading from %s", list)
-	if strings.HasPrefix(list, "http://") || strings.HasPrefix(list, "https://") {
-		return loadBlockListFromUrl(list)
+func loadBlockList(c *caddy.Controller, name string) ([]string, error) {
+	log.Infof("Loading from %s", name)
+	if strings.HasPrefix(name, "http://") || strings.HasPrefix(name, "https://") {
+		return loadBlockListFromUrl(c, name)
 	}
-	return loadBlockListFromFile(list)
+	return loadBlockListFromFile(c, name)
 }
 
-func loadBlockListFromUrl(list string) ([]string, error) {
-	response, err := http.Get(list)
+func loadBlockListFromUrl(c *caddy.Controller, name string) ([]string, error) {
+	response, err := http.Get(name)
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
-	return strings.Split(string(body), "\n"), nil
+	domains, err := strings.Split(string(body), "\n"), nil
+	if err == nil {
+		log.Infof("Loaded %d domains from %s", len(domains), name)
+	}
+	return domains, err
 }
 
-func loadBlockListFromFile(list string) ([]string, error) {
-	content, err := ioutil.ReadFile(list)
+func loadBlockListFromFile(c *caddy.Controller, name string) ([]string, error) {
+	if !filepath.IsAbs(name) {
+		name = filepath.Join(
+			filepath.Dir(c.File()),
+			name,
+		)
+	}
+
+	content, err := ioutil.ReadFile(name)
 	if err != nil {
 		return nil, err
 	}
-	return strings.Split(string(content), "\n"), err
+	domains, err := strings.Split(string(content), "\n"), err
+	if err == nil {
+		log.Infof("Loaded %d domains from %s", len(domains), name)
+	}
+	return domains, err
 }

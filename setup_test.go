@@ -7,25 +7,30 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestSetup tests the various things that should be parsed by setup.
-// Make sure you also test for parse errors.
-func TestSetup(t *testing.T) {
+func TestSetupInvalidConfig(t *testing.T) {
 	c := caddy.NewTestController("dns", `blocklist`)
 
 	err := setup(c)
 	assert.EqualError(
 		t,
 		err,
-		"plugin/blocklist: Testfile:1 - Error during parsing: Wrong argument count or unexpected line ending after 'blocklist'",
+		"plugin/blocklist: Missing url or path to blocklist.",
 	)
 
-	c = caddy.NewTestController("dns", `blocklist example/list.txt`)
-	if err := setup(c); err == nil {
-		t.Fatalf("Expected errors, but got: %v", err)
-	}
+	c = caddy.NewTestController("dns", `blocklist example/list.txt example/list.txt`)
+	err = setup(c)
+	assert.EqualError(
+		t,
+		err,
+		"plugin/blocklist: To many arguments for blocklist.",
+	)
+}
+func TestSetupValidConfig(t *testing.T) {
+	c := caddy.NewTestController("dns", `blocklist example/list.txt`)
+	err := setup(c)
+	assert.NoError(t, err)
 
 	c = caddy.NewTestController("dns", `blocklist https://mirror1.malwaredomains.com/files/justdomains`)
-	if err := setup(c); err == nil {
-		t.Fatalf("Expected errors, but got: %v", err)
-	}
+	err = setup(c)
+	assert.NoError(t, err)
 }
