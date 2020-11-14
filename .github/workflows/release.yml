@@ -41,7 +41,7 @@ jobs:
         zip "coredns-with-blocklist-${{ matrix.goos }}-${{ matrix.goarch }}" coredns
       env:
         GOOS: ${{ matrix.goos }}
-        GOARCHIVE: ${{ matrix.goarch }}
+        GOARCH: ${{ matrix.goarch }}
 
     - name: Upload Release Asset
       id: upload-release-asset

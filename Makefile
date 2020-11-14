@@ -10,19 +10,19 @@ test: $(GO_FILES)
 
 linux/arm: $(GO_FILES)
 	mkdir -p linux/arm
-	go build -o linux/arm/coredns ./example/main.go
+	GOOS=linux GOARCH=arm go build -o linux/arm/coredns ./example/main.go
 
 linux/arm64: $(GO_FILES)
 	mkdir -p linux/arm64
-	go build -o linux/arm64/coredns ./example/main.go
+	GOOS=linux GOARCH=arm64 go build -o linux/arm64/coredns ./example/main.go
 
 linux/amd64: $(GO_FILES)
 	mkdir -p linux/amd64
-	go build -o linux/amd64/coredns ./example/main.go
+	GOOS=linux GOARCH=amd64 go build -o linux/amd64/coredns ./example/main.go
 
 linux/386: $(GO_FILES)
 	mkdir -p linux/386
-	go build -o linux/386/coredns ./example/main.go
+	GOOS=linux GOARCH=386 go build -o linux/386/coredns ./example/main.go
 
 coredns: $(GO_FILES)
 	go build -o coredns ./example/main.go
@@ -34,3 +34,5 @@ clean:
 	rm -rf coredns linux
 
 dist: linux/arm linux/arm64 linux/amd64 linux/386
+
+.PHONY: dist clean
