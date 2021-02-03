@@ -1,8 +1,9 @@
 . {
   log
+  debug
   prometheus
 
-  blocklist https://mirror1.malwaredomains.com/files/justdomains
+  blocklist https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
   blocklist list.txt
 
   forward . 1.1.1.1 1.0.0.1
