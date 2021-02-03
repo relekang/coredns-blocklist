@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/coredns/caddy"
@@ -53,11 +54,25 @@ func loadBlockListFromFile(c *caddy.Controller, name string) ([]string, error) {
 
 func toMap(domains []string) map[string]bool {
 	domainsMap := map[string]bool{}
-	for _, domain := range domains {
-		if strings.HasSuffix(domain, ".") {
-			domainsMap[domain] = true
+	fullLineCommentRegex := regexp.MustCompile(`^[ ]*#`)
+	inlineCommentRegex := regexp.MustCompile(`[ ]*#.*$`)
+	for _, line := range domains {
+		if fullLineCommentRegex.MatchString(line) {
+			log.Debugf("Filtered out comment '%s' from blocklist", line)
+			continue
+		}
+		line = inlineCommentRegex.ReplaceAllString(line, "")
+		if strings.HasPrefix(line, "0.0.0.0 ") {
+			line = strings.Replace(line, "0.0.0.0 ", "", 1)
+		}
+		if line == "" {
+			continue
+		}
+		log.Debugf("Loaded '%s' into blocklist", line)
+		if strings.HasSuffix(line, ".") {
+			domainsMap[line] = true
 		} else {
-			domainsMap[domain+"."] = true
+			domainsMap[line+"."] = true
 		}
 	}
 	return domainsMap
