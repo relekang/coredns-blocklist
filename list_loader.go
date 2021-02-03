@@ -24,11 +24,12 @@ func loadBlockListFromUrl(c *caddy.Controller, name string) ([]string, error) {
 	}
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
-	domains, err := strings.Split(string(body), "\n"), nil
-	if err == nil {
-		log.Infof("Loaded %d domains from %s", len(domains), name)
-		domainCount.WithLabelValues(name).Set(float64(len(domains)))
+	if err != nil {
+		return nil, err
 	}
+	domains := strings.Split(string(body), "\n")
+	log.Infof("Loaded %d domains from %s", len(domains), name)
+	domainCount.WithLabelValues(name).Set(float64(len(domains)))
 	return domains, err
 }
 
@@ -44,11 +45,9 @@ func loadBlockListFromFile(c *caddy.Controller, name string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	domains, err := strings.Split(string(content), "\n"), err
-	if err == nil {
-		log.Infof("Loaded %d domains from %s", len(domains), name)
-		domainCount.WithLabelValues(name).Set(float64(len(domains)))
-	}
+	domains := strings.Split(string(content), "\n")
+	log.Infof("Loaded %d domains from %s", len(domains), name)
+	domainCount.WithLabelValues(name).Set(float64(len(domains)))
 	return domains, err
 }
 
