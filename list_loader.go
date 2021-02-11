@@ -62,9 +62,8 @@ func toMap(domains []string) map[string]bool {
 			continue
 		}
 		line = inlineCommentRegex.ReplaceAllString(line, "")
-		if strings.HasPrefix(line, "0.0.0.0 ") {
-			line = strings.Replace(line, "0.0.0.0 ", "", 1)
-		}
+		line = strings.Replace(line, "0.0.0.0 ", "", 1)
+		line = strings.Replace(line, "127.0.0.1 ", "", 1)
 		if line == "" {
 			continue
 		}
