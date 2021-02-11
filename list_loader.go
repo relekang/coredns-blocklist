@@ -64,7 +64,7 @@ func toMap(domains []string) map[string]bool {
 		line = inlineCommentRegex.ReplaceAllString(line, "")
 		line = strings.Replace(line, "0.0.0.0 ", "", 1)
 		line = strings.Replace(line, "127.0.0.1 ", "", 1)
-		if line == "" {
+		if line == "" || line == "localhost" {
 			continue
 		}
 		log.Debugf("Loaded '%s' into blocklist", line)
