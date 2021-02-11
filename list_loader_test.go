@@ -18,6 +18,7 @@ var tests = []struct {
 	{[]string{"# comment with.domain", "bad.domain."}, map[string]bool{"bad.domain.": true}},
 	{[]string{"bad.domain # With a comment"}, map[string]bool{"bad.domain.": true}},
 	{[]string{"localhost"}, map[string]bool{}},
+	{[]string{"something else"}, map[string]bool{}},
 }
 
 func TestToMap(t *testing.T) {
