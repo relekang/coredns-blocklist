@@ -14,8 +14,24 @@ import (
 var log = clog.NewWithPlugin("blocklist")
 
 type Blocklist struct {
-	domains map[string]bool
-	Next    plugin.Handler
+	domains       map[string]bool
+	Next          plugin.Handler
+	domainMetrics bool
+}
+
+func NewBlocklistPlugin(next plugin.Handler, domains []string, domainMetrics bool) Blocklist {
+
+	log.Debugf(
+		"Creating blocklist plugin with %d domains and domain metrics set to %v",
+		len(domains),
+		domainMetrics,
+	)
+
+	return Blocklist{
+		domains:       toMap(domains),
+		Next:          next,
+		domainMetrics: domainMetrics,
+	}
 }
 
 func (b Blocklist) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
@@ -24,9 +40,17 @@ func (b Blocklist) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 	if b.shouldBlock(state.Name()) {
 		resp := new(dns.Msg)
 		resp.SetRcode(r, dns.RcodeNameError)
-		w.WriteMsg(resp)
+		err := w.WriteMsg(resp)
+
+		if err != nil {
+			return dns.RcodeServerFailure, err
+		}
 
 		blockCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
+		if b.domainMetrics {
+			blockWithDomainsCount.WithLabelValues(metrics.WithServer(ctx), state.Name()).Inc()
+		}
+
 		log.Debugf(
 			"blocked \"%s IN %s %s\" from %s",
 			state.Type(),

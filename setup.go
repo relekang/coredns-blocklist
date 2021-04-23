@@ -11,14 +11,25 @@ import (
 func init() { plugin.Register("blocklist", setup) }
 
 func setup(c *caddy.Controller) error {
-	var domains []string = []string{}
 	for c.Next() {
-
+		domainMetrics := false
 		var name string
 		c.Args(&name)
 
 		if name == "" {
 			return plugin.Error("blocklist", errors.New("Missing url or path to blocklist."))
+		}
+
+		for c.NextBlock() {
+			name := c.Val()
+			switch name {
+			case "domain_metrics":
+				domainMetrics = true
+				break
+
+			default:
+				return plugin.Error("blocklist", c.Errf("unexpected '%v' command", name))
+			}
 		}
 
 		if c.NextArg() {
@@ -30,13 +41,12 @@ func setup(c *caddy.Controller) error {
 		if err != nil {
 			return plugin.Error("blocklist", err)
 		}
-		domains = append(domains, loaded...)
-	}
 
-	dnsserver.GetConfig(c).
-		AddPlugin(func(next plugin.Handler) plugin.Handler {
-			return Blocklist{Next: next, domains: toMap(domains)}
-		})
+		dnsserver.GetConfig(c).
+			AddPlugin(func(next plugin.Handler) plugin.Handler {
+				return NewBlocklistPlugin(next, loaded, domainMetrics)
+			})
+	}
 
 	return nil
 }

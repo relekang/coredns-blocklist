@@ -4,7 +4,9 @@
   prometheus
 
   blocklist https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
-  blocklist list.txt
+  blocklist list.txt {
+    domain_metrics
+  }
 
   forward . 1.1.1.1 1.0.0.1
 }

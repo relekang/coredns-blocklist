@@ -31,7 +31,7 @@ func TestSetupValidConfig(t *testing.T) {
 	err := setup(c)
 	assert.NoError(t, err)
 
-	c = caddy.NewTestController("dns", `blocklist https://mirror1.malwaredomains.com/files/justdomains`)
+	c = caddy.NewTestController("dns", `blocklist https://mirror1.malwaredomains.com/files/justdomains { domain_metrics }`)
 	err = setup(c)
 	assert.NoError(t, err)
 }
