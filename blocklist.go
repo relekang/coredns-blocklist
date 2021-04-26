@@ -43,7 +43,7 @@ func (b Blocklist) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 		err := w.WriteMsg(resp)
 
 		if err != nil {
-			return dns.RcodeServerFailure, err
+			log.Errorf("failed to write block for %s, %v+", state.Name(), err)
 		}
 
 		blockCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
