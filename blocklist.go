@@ -9,6 +9,8 @@ import (
 	"github.com/coredns/coredns/request"
 
 	"github.com/miekg/dns"
+
+	"strings"
 )
 
 var log = clog.NewWithPlugin("blocklist")
@@ -70,8 +72,26 @@ func (b Blocklist) shouldBlock(name string) bool {
 	if name == "localhost." {
 		return false
 	}
-	_, ok := b.domains[name]
-	return ok
+
+	inBlocklist := false
+
+	nameParts := strings.Split(name, ".")
+	for i := range nameParts {
+		n := strings.Join(nameParts[i:], ".")
+
+		// Because of how domains are passed through, the final iteration
+		// of the joined array will be a zero-length string
+		// Manually override that to be the DNS root RR
+		if len(n) == 0 {
+			n = "."
+		}
+
+		if _, inBlocklist = b.domains[n]; inBlocklist {
+			break
+		}
+	}
+
+	return inBlocklist
 }
 
 func (b Blocklist) Name() string { return "blocklist" }
