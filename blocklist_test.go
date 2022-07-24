@@ -86,6 +86,23 @@ func TestBlockedParentDomain(t *testing.T) {
 	assert.Equal(t, dns.RcodeNameError, rec.Rcode)
 }
 
+func TestBlockedChildDomain(t *testing.T) {
+	x := Blocklist{Next: NextHandler(), domains: map[string]bool{"child.bad.domain.": true}}
+
+	b := &bytes.Buffer{}
+	golog.SetOutput(b)
+
+	ctx := context.TODO()
+	r := new(dns.Msg)
+	r.SetQuestion("bad.domain.", dns.TypeA)
+
+	rec := dnstest.NewRecorder(&test.ResponseWriter{})
+
+	x.ServeDNS(ctx, rec, r)
+
+	assert.Equal(t, dns.RcodeSuccess, rec.Rcode)
+}
+
 func TestBlockedRoot(t *testing.T) {
 	x := Blocklist{Next: NextHandler(), domains: map[string]bool{".": true}}
 
