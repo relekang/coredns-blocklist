@@ -16,64 +16,93 @@ import (
 var log = clog.NewWithPlugin("blocklist")
 
 type Blocklist struct {
-	domains       map[string]bool
+	blockDomains  map[string]bool
+	allowDomains  map[string]bool
 	Next          plugin.Handler
 	domainMetrics bool
 }
 
-func NewBlocklistPlugin(next plugin.Handler, domains []string, domainMetrics bool) Blocklist {
+func NewBlocklistPlugin(next plugin.Handler, blockDomains []string, allowDomains []string, domainMetrics bool) Blocklist {
 
 	log.Debugf(
-		"Creating blocklist plugin with %d domains and domain metrics set to %v",
-		len(domains),
+		"Creating blocklist plugin with %d blocks, %d allows, and domain metrics set to %v",
+		len(blockDomains),
+		len(allowDomains),
 		domainMetrics,
 	)
 
 	return Blocklist{
-		domains:       toMap(domains),
+		blockDomains:  toMap(blockDomains),
+		allowDomains:  toMap(allowDomains),
 		Next:          next,
 		domainMetrics: domainMetrics,
 	}
 }
 
+// ServeDNS handles processing the DNS query in relation to the blocklist
+// A count of metrics around the blocking and allowing status is maintained
+// It returns the DNS RCODE
 func (b Blocklist) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Msg) (int, error) {
 	state := request.Request{W: w, Req: r}
 
-	if b.shouldBlock(state.Name()) {
-		resp := new(dns.Msg)
-		resp.SetRcode(r, dns.RcodeNameError)
-		err := w.WriteMsg(resp)
+	shouldBlock, shouldAllow := b.shouldBlock(state.Name())
 
-		if err != nil {
-			log.Errorf("failed to write block for %s, %v+", state.Name(), err)
+	if shouldBlock {
+		// If an RR should be both blocked and allowed,
+		// then allow it and update appropriate metrics
+		if shouldAllow {
+			allowCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
+			if b.domainMetrics {
+				allowWithDomainsCount.WithLabelValues(metrics.WithServer(ctx), state.Name()).Inc()
+			}
+
+		} else {
+			// Handle the blocking of the RR
+			resp := new(dns.Msg)
+			resp.SetRcode(r, dns.RcodeNameError)
+			err := w.WriteMsg(resp)
+
+			if err != nil {
+				log.Errorf("failed to write block for %s, %v+", state.Name(), err)
+			}
+
+			blockCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
+			if b.domainMetrics {
+				blockWithDomainsCount.WithLabelValues(metrics.WithServer(ctx), state.Name()).Inc()
+			}
+
+			log.Debugf(
+				"blocked \"%s IN %s %s\" from %s",
+				state.Type(),
+				state.Name(),
+				state.Proto(),
+				state.RemoteAddr(),
+			)
+
+			return dns.RcodeNameError, nil
 		}
-
-		blockCount.WithLabelValues(metrics.WithServer(ctx)).Inc()
-		if b.domainMetrics {
-			blockWithDomainsCount.WithLabelValues(metrics.WithServer(ctx), state.Name()).Inc()
-		}
-
-		log.Debugf(
-			"blocked \"%s IN %s %s\" from %s",
-			state.Type(),
-			state.Name(),
-			state.Proto(),
-			state.RemoteAddr(),
-		)
-
-		return dns.RcodeNameError, nil
 	}
 
 	return plugin.NextOrFailure(b.Name(), b.Next, ctx, w, r)
 }
 
-func (b Blocklist) shouldBlock(name string) bool {
+// shouldBlock checks for the presence of a DNS name in the block and allow lists
+// It returns the blockList and allowList status for that RR
+func (b Blocklist) shouldBlock(name string) (isBlocked bool, isAllowed bool) {
 	log.Debugf("shouldBlock(%s)", name)
+
 	if name == "localhost." {
-		return false
+		return false, false
 	}
 
-	inBlocklist := false
+	isBlocked = inList(name, b.blockDomains)
+	isAllowed = inList(name, b.allowDomains)
+
+	return isBlocked, isAllowed
+}
+
+func inList(name string, domainList map[string]bool) bool {
+	inList := false
 
 	nameParts := strings.Split(name, ".")
 	for i := range nameParts {
@@ -86,12 +115,12 @@ func (b Blocklist) shouldBlock(name string) bool {
 			n = "."
 		}
 
-		if _, inBlocklist = b.domains[n]; inBlocklist {
+		if _, inList = domainList[n]; inList {
 			break
 		}
 	}
 
-	return inBlocklist
+	return inList
 }
 
 func (b Blocklist) Name() string { return "blocklist" }

@@ -13,22 +13,30 @@ func init() { plugin.Register("blocklist", setup) }
 func setup(c *caddy.Controller) error {
 	for c.Next() {
 		domainMetrics := false
-		var name string
-		c.Args(&name)
+		var blocklistLocation string
+		var allowlistLocation string
+		var allowlist []string
+		c.Args(&blocklistLocation)
 
-		if name == "" {
+		if blocklistLocation == "" {
 			return plugin.Error("blocklist", errors.New("Missing url or path to blocklist."))
 		}
 
 		for c.NextBlock() {
-			name := c.Val()
-			switch name {
+			option := c.Val()
+			switch option {
+			case "allowlist":
+				remaining := c.RemainingArgs()
+				if len(remaining) != 1 {
+					return plugin.Error("blocklist", errors.New("allowlist requires a single argument."))
+				}
+
+				allowlistLocation = remaining[0]
+				log.Debugf("Setting allowlist location to %s", allowlistLocation)
 			case "domain_metrics":
 				domainMetrics = true
-				break
-
 			default:
-				return plugin.Error("blocklist", c.Errf("unexpected '%v' command", name))
+				return plugin.Error("blocklist", c.Errf("unexpected '%v' command", option))
 			}
 		}
 
@@ -36,15 +44,21 @@ func setup(c *caddy.Controller) error {
 			return plugin.Error("blocklist", errors.New("To many arguments for blocklist."))
 		}
 
-		loaded, err := loadBlockList(c, name)
-
+		blocklist, err := loadList(c, blocklistLocation)
 		if err != nil {
 			return plugin.Error("blocklist", err)
 		}
 
+		if allowlistLocation != "" {
+			allowlist, err = loadList(c, allowlistLocation)
+			if err != nil {
+				return plugin.Error("blocklist", err)
+			}
+		}
+
 		dnsserver.GetConfig(c).
 			AddPlugin(func(next plugin.Handler) plugin.Handler {
-				return NewBlocklistPlugin(next, loaded, domainMetrics)
+				return NewBlocklistPlugin(next, blocklist, allowlist, domainMetrics)
 			})
 	}
 
