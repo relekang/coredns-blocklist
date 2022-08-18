@@ -10,15 +10,15 @@ import (
 	"github.com/coredns/caddy"
 )
 
-func loadBlockList(c *caddy.Controller, name string) ([]string, error) {
-	log.Infof("Loading from %s", name)
-	if strings.HasPrefix(name, "http://") || strings.HasPrefix(name, "https://") {
-		return loadBlockListFromUrl(c, name)
+func loadList(c *caddy.Controller, location string) ([]string, error) {
+	log.Infof("Loading from %s", location)
+	if strings.HasPrefix(location, "http://") || strings.HasPrefix(location, "https://") {
+		return loadListFromUrl(c, location)
 	}
-	return loadBlockListFromFile(c, name)
+	return loadListFromFile(c, location)
 }
 
-func loadBlockListFromUrl(c *caddy.Controller, name string) ([]string, error) {
+func loadListFromUrl(c *caddy.Controller, name string) ([]string, error) {
 	response, err := http.Get(name)
 	if err != nil {
 		return nil, err
@@ -34,7 +34,7 @@ func loadBlockListFromUrl(c *caddy.Controller, name string) ([]string, error) {
 	return domains, err
 }
 
-func loadBlockListFromFile(c *caddy.Controller, name string) ([]string, error) {
+func loadListFromFile(c *caddy.Controller, name string) ([]string, error) {
 	if !filepath.IsAbs(name) {
 		name = filepath.Join(
 			filepath.Dir(c.File()),

@@ -36,14 +36,14 @@ func TestExample(t *testing.T) {
 }
 
 func TestAllowedDomain(t *testing.T) {
-	x := Blocklist{Next: NextHandler(), domains: map[string]bool{"bad.domain.": true}}
+	x := Blocklist{Next: NextHandler(), blockDomains: map[string]bool{"bad.domain.": true}, allowDomains: map[string]bool{"good.domain.": true}}
 
 	b := &bytes.Buffer{}
 	golog.SetOutput(b)
 
 	ctx := context.TODO()
 	r := new(dns.Msg)
-	r.SetQuestion("example.com.", dns.TypeA)
+	r.SetQuestion("good.domain.", dns.TypeA)
 
 	rec := dnstest.NewRecorder(&test.ResponseWriter{})
 
@@ -53,7 +53,7 @@ func TestAllowedDomain(t *testing.T) {
 }
 
 func TestBlockedDomain(t *testing.T) {
-	x := Blocklist{Next: NextHandler(), domains: map[string]bool{"bad.domain.": true}}
+	x := Blocklist{Next: NextHandler(), blockDomains: map[string]bool{"bad.domain.": true}}
 
 	b := &bytes.Buffer{}
 	golog.SetOutput(b)
@@ -70,7 +70,7 @@ func TestBlockedDomain(t *testing.T) {
 }
 
 func TestBlockedParentDomain(t *testing.T) {
-	x := Blocklist{Next: NextHandler(), domains: map[string]bool{"bad.domain.": true}}
+	x := Blocklist{Next: NextHandler(), blockDomains: map[string]bool{"bad.domain.": true}}
 
 	b := &bytes.Buffer{}
 	golog.SetOutput(b)
@@ -87,7 +87,7 @@ func TestBlockedParentDomain(t *testing.T) {
 }
 
 func TestBlockedChildDomain(t *testing.T) {
-	x := Blocklist{Next: NextHandler(), domains: map[string]bool{"child.bad.domain.": true}}
+	x := Blocklist{Next: NextHandler(), blockDomains: map[string]bool{"child.bad.domain.": true}}
 
 	b := &bytes.Buffer{}
 	golog.SetOutput(b)
@@ -104,7 +104,7 @@ func TestBlockedChildDomain(t *testing.T) {
 }
 
 func TestBlockedRoot(t *testing.T) {
-	x := Blocklist{Next: NextHandler(), domains: map[string]bool{".": true}}
+	x := Blocklist{Next: NextHandler(), blockDomains: map[string]bool{".": true}}
 
 	b := &bytes.Buffer{}
 	golog.SetOutput(b)
@@ -118,4 +118,91 @@ func TestBlockedRoot(t *testing.T) {
 	x.ServeDNS(ctx, rec, r)
 
 	assert.Equal(t, dns.RcodeNameError, rec.Rcode)
+}
+
+func TestAllowedDomainWithBlockedParentDomain(t *testing.T) {
+	x := Blocklist{Next: NextHandler(), blockDomains: map[string]bool{"bad.domain.": true}, allowDomains: map[string]bool{"sub.good.domain.": true}}
+
+	b := &bytes.Buffer{}
+	golog.SetOutput(b)
+
+	ctx := context.TODO()
+	r := new(dns.Msg)
+	r.SetQuestion("sub.good.domain.", dns.TypeA)
+
+	rec := dnstest.NewRecorder(&test.ResponseWriter{})
+
+	x.ServeDNS(ctx, rec, r)
+
+	assert.Equal(t, dns.RcodeSuccess, rec.Rcode)
+}
+
+func TestBlockedDomainWithAllowedParentDomain(t *testing.T) {
+	// This test should succeed, as the allowlist always takes precedence, even with a more-specific
+	// block in place
+	x := Blocklist{Next: NextHandler(), blockDomains: map[string]bool{"sub.bad.domain.": true}, allowDomains: map[string]bool{"good.domain.": true}}
+
+	b := &bytes.Buffer{}
+	golog.SetOutput(b)
+
+	ctx := context.TODO()
+	r := new(dns.Msg)
+	r.SetQuestion("sub.good.domain.", dns.TypeA)
+
+	rec := dnstest.NewRecorder(&test.ResponseWriter{})
+
+	x.ServeDNS(ctx, rec, r)
+
+	assert.Equal(t, dns.RcodeSuccess, rec.Rcode)
+}
+
+func TestAllowedDomainWithDomainMetrics(t *testing.T) {
+	x := Blocklist{Next: NextHandler(), blockDomains: map[string]bool{"bad.domain.": true}, allowDomains: map[string]bool{"allow.bad.domain.": true}, domainMetrics: true}
+
+	b := &bytes.Buffer{}
+	golog.SetOutput(b)
+
+	ctx := context.TODO()
+	r := new(dns.Msg)
+	r.SetQuestion("allow.bad.domain.", dns.TypeA)
+
+	rec := dnstest.NewRecorder(&test.ResponseWriter{})
+
+	x.ServeDNS(ctx, rec, r)
+
+	assert.Equal(t, dns.RcodeSuccess, rec.Rcode)
+}
+
+func TestBlockedDomainWithDomainMetrics(t *testing.T) {
+	x := Blocklist{Next: NextHandler(), blockDomains: map[string]bool{"bad.domain.": true}, domainMetrics: true}
+
+	b := &bytes.Buffer{}
+	golog.SetOutput(b)
+
+	ctx := context.TODO()
+	r := new(dns.Msg)
+	r.SetQuestion("bad.domain.", dns.TypeA)
+
+	rec := dnstest.NewRecorder(&test.ResponseWriter{})
+
+	x.ServeDNS(ctx, rec, r)
+
+	assert.Equal(t, dns.RcodeNameError, rec.Rcode)
+}
+
+func TestBlockedLocalhostStillAllowed(t *testing.T) {
+	x := Blocklist{Next: NextHandler(), blockDomains: map[string]bool{"localhost.": true}}
+
+	b := &bytes.Buffer{}
+	golog.SetOutput(b)
+
+	ctx := context.TODO()
+	r := new(dns.Msg)
+	r.SetQuestion("localhost.", dns.TypeA)
+
+	rec := dnstest.NewRecorder(&test.ResponseWriter{})
+
+	x.ServeDNS(ctx, rec, r)
+
+	assert.Equal(t, dns.RcodeSuccess, rec.Rcode)
 }

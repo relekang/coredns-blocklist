@@ -17,7 +17,7 @@ domain on each line. There is an example file in the example folder.
   # load from url
   blocklist https://mirror1.malwaredomains.com/files/justdomains
   # load from file, if the path is not absolute it will be relative to the Corefile
-  blocklist list.txt
+  blocklist blocklist.txt
 
   forward . 1.1.1.1 1.0.0.1
 }

@@ -16,6 +16,13 @@ var blockCount = promauto.NewCounterVec(prometheus.CounterOpts{
 	Help:      "Counter of blocks made.",
 }, []string{"server"})
 
+var allowCount = promauto.NewCounterVec(prometheus.CounterOpts{
+	Namespace: plugin.Namespace,
+	Subsystem: "blocklist",
+	Name:      "allow_count_total",
+	Help:      "Counter of allows that have overridden blocks.",
+}, []string{"server"})
+
 var blockWithDomainsCount = promauto.NewCounterVec(prometheus.CounterOpts{
 	Namespace: plugin.Namespace,
 	Subsystem: "blocklist",
@@ -23,11 +30,18 @@ var blockWithDomainsCount = promauto.NewCounterVec(prometheus.CounterOpts{
 	Help:      "Counter of blocks made.",
 }, []string{"server", "domain"})
 
+var allowWithDomainsCount = promauto.NewCounterVec(prometheus.CounterOpts{
+	Namespace: plugin.Namespace,
+	Subsystem: "blocklist",
+	Name:      "allow_count_with_domains_total",
+	Help:      "Counter of allows that have overridden blocks, with domain.",
+}, []string{"server", "domain"})
+
 var domainCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
 	Namespace: plugin.Namespace,
 	Subsystem: "blocklist",
-	Name:      "blocklist_size",
-	Help:      "Number of blocked domains.",
+	Name:      "list_size",
+	Help:      "Number of domains in list.",
 }, []string{"file"})
 
 var once sync.Once

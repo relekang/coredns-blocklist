@@ -4,7 +4,8 @@
   prometheus
 
   blocklist https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
-  blocklist list.txt {
+  blocklist blocklist.txt {
+    allowlist allowlist.txt
     domain_metrics
   }
 
