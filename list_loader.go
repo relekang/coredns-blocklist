@@ -1,8 +1,10 @@
 package blocklist
 
 import (
-	"io/ioutil"
+	"bufio"
+	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -24,14 +26,7 @@ func loadListFromUrl(c *caddy.Controller, name string) ([]string, error) {
 		return nil, err
 	}
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-	domains := strings.Split(string(body), "\n")
-	log.Infof("Loaded %d domains from %s", len(domains), name)
-	domainCount.WithLabelValues(name).Set(float64(len(domains)))
-	return domains, err
+	return collectDomains(response.Body, name)
 }
 
 func loadListFromFile(c *caddy.Controller, name string) ([]string, error) {
@@ -41,15 +36,26 @@ func loadListFromFile(c *caddy.Controller, name string) ([]string, error) {
 			name,
 		)
 	}
-
-	content, err := ioutil.ReadFile(name)
+	readFile, err := os.Open(name)
 	if err != nil {
 		return nil, err
 	}
-	domains := strings.Split(string(content), "\n")
+	defer readFile.Close()
+	return collectDomains(readFile, name)
+}
+
+func collectDomains(r io.Reader, name string) ([]string, error) {
+	var domains []string
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		domains = append(domains, scanner.Text())
+	}
+	if scanner.Err() != nil {
+		return nil, scanner.Err()
+	}
 	log.Infof("Loaded %d domains from %s", len(domains), name)
 	domainCount.WithLabelValues(name).Set(float64(len(domains)))
-	return domains, err
+	return domains, nil
 }
 
 func toMap(domains []string) map[string]bool {
