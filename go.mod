@@ -8,5 +8,5 @@ require (
 	github.com/emicklei/go-restful v2.16.0+incompatible // indirect
 	github.com/miekg/dns v1.1.50
 	github.com/prometheus/client_golang v1.14.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 )
