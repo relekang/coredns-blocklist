@@ -7,7 +7,7 @@ require (
 	github.com/coredns/coredns v1.11.2
 	github.com/miekg/dns v1.1.58
 	github.com/prometheus/client_golang v1.18.0
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 )
 
 require (
