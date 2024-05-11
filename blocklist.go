@@ -20,15 +20,17 @@ type Blocklist struct {
 	allowDomains  map[string]bool
 	Next          plugin.Handler
 	domainMetrics bool
+	blockResponse int
 }
 
-func NewBlocklistPlugin(next plugin.Handler, blockDomains []string, allowDomains []string, domainMetrics bool) Blocklist {
+func NewBlocklistPlugin(next plugin.Handler, blockDomains []string, allowDomains []string, domainMetrics bool, blockResponse int) Blocklist {
 
 	log.Debugf(
-		"Creating blocklist plugin with %d blocks, %d allows, and domain metrics set to %v",
+		"Creating blocklist plugin with %d blocks, %d allows, domain metrics set to %v, and a block response code of %d",
 		len(blockDomains),
 		len(allowDomains),
 		domainMetrics,
+		blockResponse,
 	)
 
 	return Blocklist{
@@ -36,6 +38,7 @@ func NewBlocklistPlugin(next plugin.Handler, blockDomains []string, allowDomains
 		allowDomains:  toMap(allowDomains),
 		Next:          next,
 		domainMetrics: domainMetrics,
+		blockResponse: blockResponse,
 	}
 }
 
@@ -59,7 +62,7 @@ func (b Blocklist) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 		} else {
 			// Handle the blocking of the RR
 			resp := new(dns.Msg)
-			resp.SetRcode(r, dns.RcodeNameError)
+			resp.SetRcode(r, b.blockResponse)
 			err := w.WriteMsg(resp)
 
 			if err != nil {
@@ -79,7 +82,7 @@ func (b Blocklist) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 				state.RemoteAddr(),
 			)
 
-			return dns.RcodeNameError, nil
+			return b.blockResponse, nil
 		}
 	}
 
