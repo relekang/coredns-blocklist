@@ -20,6 +20,7 @@ func setup(c *caddy.Controller) error {
 		var allowlistLocation string
 		var allowlist []string
 		var blockResponse string
+		var bootStrapDNS string
 		c.Args(&blocklistLocation)
 
 		if blocklistLocation == "" {
@@ -39,6 +40,8 @@ func setup(c *caddy.Controller) error {
 				log.Debugf("Setting allowlist location to %s", allowlistLocation)
 			case "domain_metrics":
 				domainMetrics = true
+			case "bootstrap_dns":
+				bootStrapDNS = c.RemainingArgs()[0]
 			case "block_response":
 				remaining := c.RemainingArgs()
 				if len(remaining) != 1 {
@@ -56,13 +59,13 @@ func setup(c *caddy.Controller) error {
 			return plugin.Error("blocklist", errors.New("To many arguments for blocklist."))
 		}
 
-		blocklist, err := loadList(c, blocklistLocation)
+		blocklist, err := loadList(c, blocklistLocation, bootStrapDNS)
 		if err != nil {
 			return plugin.Error("blocklist", err)
 		}
 
 		if allowlistLocation != "" {
-			allowlist, err = loadList(c, allowlistLocation)
+			allowlist, err = loadList(c, allowlistLocation, bootStrapDNS)
 			if err != nil {
 				return plugin.Error("blocklist", err)
 			}

@@ -15,7 +15,11 @@ domain on each line. There is an example file in the example folder.
   prometheus
 
   # load from url
-  blocklist https://mirror1.malwaredomains.com/files/justdomains
+  blocklist https://mirror1.malwaredomains.com/files/justdomains {
+    # if CoreDNS listens at 53, you need another DNS to bootstrap the download
+    bootstrap_dns 1.1.1.1:53
+  }
+
   # load from file, if the path is not absolute it will be relative to the Corefile
   blocklist blocklist.txt
 

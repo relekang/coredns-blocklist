@@ -2,31 +2,70 @@ package blocklist
 
 import (
 	"bufio"
+	"context"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/coredns/caddy"
 )
 
-func loadList(c *caddy.Controller, location string) ([]string, error) {
+func loadList(c *caddy.Controller, location string, bootStrapDNS string) ([]string, error) {
 	log.Infof("Loading from %s", location)
 	if strings.HasPrefix(location, "http://") || strings.HasPrefix(location, "https://") {
-		return loadListFromUrl(c, location)
+		return loadListFromUrl(c, location, bootStrapDNS)
 	}
 	return loadListFromFile(c, location)
 }
 
-func loadListFromUrl(c *caddy.Controller, name string) ([]string, error) {
-	response, err := http.Get(name)
+func loadListFromUrl(c *caddy.Controller, name string, bootStrapDNS string) ([]string, error) {
+	client := &http.Client{}
+	if bootStrapDNS != "" {
+		client = customDNS(bootStrapDNS)
+	}
+	response, err := client.Get(name)
 	if err != nil {
 		return nil, err
 	}
 	defer response.Body.Close()
 	return collectDomains(response.Body, name)
+}
+
+func customDNS(bootStrapDNS string) *http.Client {
+	var (
+		dnsResolverIP        = bootStrapDNS // Google DNS resolver.
+		dnsResolverProto     = "udp"        // Protocol to use for the DNS resolver
+		dnsResolverTimeoutMs = 5000         // Timeout (ms) for the DNS resolver (optional)
+	)
+
+	dialer := &net.Dialer{
+		Resolver: &net.Resolver{
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				d := net.Dialer{
+					Timeout: time.Duration(dnsResolverTimeoutMs) * time.Millisecond,
+				}
+				return d.DialContext(ctx, dnsResolverProto, dnsResolverIP)
+			},
+		},
+	}
+	dialContext := func(ctx context.Context, network, addr string) (net.Conn, error) {
+		return dialer.DialContext(ctx, network, addr)
+	}
+	tr := &http.Transport{
+		MaxIdleConns:       10,
+		IdleConnTimeout:    30 * time.Second,
+		DisableCompression: true,
+		DialContext:        dialContext,
+	}
+	client := &http.Client{Transport: tr}
+
+	return client
 }
 
 func loadListFromFile(c *caddy.Controller, name string) ([]string, error) {
