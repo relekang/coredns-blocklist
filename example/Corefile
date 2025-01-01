@@ -3,7 +3,11 @@
   debug
   prometheus
 
-  blocklist https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+  blocklist https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts {
+    # if CoreDNS listens at 53, you need another DNS to bootstrap the download
+    bootstrap_dns 1.1.1.1:53
+  }
+
   blocklist blocklist.txt {
     allowlist allowlist.txt
     domain_metrics
