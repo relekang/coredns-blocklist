@@ -8,7 +8,7 @@ require (
 	github.com/coredns/caddy v1.1.2-0.20241029205200-8de985351a98
 	github.com/coredns/coredns v1.12.0
 	github.com/miekg/dns v1.1.63
-	github.com/prometheus/client_golang v1.20.5
+	github.com/prometheus/client_golang v1.21.0
 	github.com/stretchr/testify v1.10.0
 )
 
@@ -93,7 +93,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.17.9 // indirect
+	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -113,7 +113,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.60.1 // indirect
+	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/quic-go/quic-go v0.48.2 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
@@ -150,7 +150,7 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20241104194629-dd2ea8efbc28 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241104194629-dd2ea8efbc28 // indirect
 	google.golang.org/grpc v1.68.0 // indirect
-	google.golang.org/protobuf v1.35.2 // indirect
+	google.golang.org/protobuf v1.36.1 // indirect
 	gopkg.in/DataDog/dd-trace-go.v1 v1.69.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
