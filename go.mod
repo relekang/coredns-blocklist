@@ -7,7 +7,7 @@ toolchain go1.22.10
 require (
 	github.com/coredns/caddy v1.1.2-0.20241029205200-8de985351a98
 	github.com/coredns/coredns v1.12.0
-	github.com/miekg/dns v1.1.64
+	github.com/miekg/dns v1.1.65
 	github.com/prometheus/client_golang v1.21.1
 	github.com/stretchr/testify v1.10.0
 )
