@@ -8,7 +8,6 @@ jobs:
   releases-matrix:
     name: Release Go Binary
     runs-on: ubuntu-latest
-    needs: create-release
     strategy:
       matrix:
         goos: [linux]
