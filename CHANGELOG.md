@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.3](https://github.com/relekang/coredns-blocklist/compare/v1.13.2...v1.13.3) (2026-01-11)
+
+
+### Continuous Integration
+
+* Set upload url based on event ([80c9520](https://github.com/relekang/coredns-blocklist/commit/80c9520abdab513e442a815501d7e99f0d714081))
+
 ## [1.13.2](https://github.com/relekang/coredns-blocklist/compare/v1.13.1...v1.13.2) (2026-01-11)
 
 
