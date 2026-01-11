@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.2](https://github.com/relekang/coredns-blocklist/compare/v1.13.1...v1.13.2) (2026-01-11)
+
+
+### Miscellaneous Chores
+
+* release 1.13.2 ([7dc9f37](https://github.com/relekang/coredns-blocklist/commit/7dc9f3762155dda62bb90dfb972b20a822e7c321))
+
 ## [1.13.1](https://github.com/relekang/coredns-blocklist/compare/v1.13.0...v1.13.1) (2026-01-11)
 
 
