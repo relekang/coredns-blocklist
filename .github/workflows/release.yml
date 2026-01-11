@@ -36,7 +36,7 @@ jobs:
       uses: actions/setup-go@v1
       with:
         go-version: 1.24
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v6
     - name: Build artifact
       run: |
         go build -o coredns example/main.go
