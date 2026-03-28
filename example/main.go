@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "github.com/coredns/coredns/core/plugin"
+	_ "github.com/coredns/coredns/plugin/view"
 	_ "github.com/relekang/coredns-blocklist"
 
 	"github.com/coredns/coredns/core/dnsserver"
@@ -10,7 +11,7 @@ import (
 
 func init() {
 	dnsserver.Directives = append(
-		[]string{"log", "blocklist"},
+		[]string{"view", "log", "blocklist"},
 		dnsserver.Directives...,
 	)
 }
