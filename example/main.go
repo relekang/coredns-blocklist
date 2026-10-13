@@ -1,6 +1,8 @@
 package main
 
 import (
+	"slices"
+
 	_ "github.com/coredns/coredns/core/plugin"
 	_ "github.com/coredns/coredns/plugin/view"
 	_ "github.com/relekang/coredns-blocklist"
@@ -10,9 +12,10 @@ import (
 )
 
 func init() {
-	dnsserver.Directives = append(
-		[]string{"view", "log", "blocklist"},
-		dnsserver.Directives...,
+	dnsserver.Directives = slices.Insert(
+		dnsserver.Directives,
+		slices.Index(dnsserver.Directives, "local"),
+		"blocklist",
 	)
 }
 
