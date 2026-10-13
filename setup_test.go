@@ -1,6 +1,8 @@
 package blocklist
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/coredns/caddy"
@@ -43,7 +45,7 @@ func TestSetupAllowlistWithNoLocation(t *testing.T) {
 }
 
 func TestSetupValidConfigWithAllowlist(t *testing.T) {
-	cfg := `blocklist https://mirror1.malwaredomains.com/files/justdomains {
+	cfg := `blocklist ` + testListURL(t) + ` {
             allowlist example/allowlist.txt
           }`
 	c := caddy.NewTestController("dns", cfg)
@@ -57,7 +59,7 @@ func TestSetupValidConfig(t *testing.T) {
 	err := setup(c)
 	assert.NoError(t, err)
 
-	c = caddy.NewTestController("dns", `blocklist https://mirror1.malwaredomains.com/files/justdomains { domain_metrics }`)
+	c = caddy.NewTestController("dns", `blocklist `+testListURL(t)+` { domain_metrics }`)
 	err = setup(c)
 	assert.NoError(t, err)
 }
@@ -99,6 +101,15 @@ func TestSetupInvalidBlockResponse(t *testing.T) {
 		err,
 		"plugin/blocklist: unknown response code 'invalid', must be either 'nxdomain' or 'refused'",
 	)
+}
+
+func testListURL(t *testing.T) string {
+	t.Helper()
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("bad.domain\n"))
+	}))
+	t.Cleanup(server.Close)
+	return server.URL
 }
 
 func TestSetupNxdomainBlockResponseCode(t *testing.T) {

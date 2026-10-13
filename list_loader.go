@@ -3,6 +3,7 @@ package blocklist
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -15,15 +16,15 @@ import (
 	"github.com/coredns/caddy"
 )
 
-func loadList(c *caddy.Controller, location string, bootStrapDNS string) ([]string, error) {
+func loadList(c *caddy.Controller, location string, bootStrapDNS string, failOnHTTPError bool) ([]string, error) {
 	log.Infof("Loading from %s", location)
 	if strings.HasPrefix(location, "http://") || strings.HasPrefix(location, "https://") {
-		return loadListFromUrl(c, location, bootStrapDNS)
+		return loadListFromUrl(c, location, bootStrapDNS, failOnHTTPError)
 	}
 	return loadListFromFile(c, location)
 }
 
-func loadListFromUrl(c *caddy.Controller, name string, bootStrapDNS string) ([]string, error) {
+func loadListFromUrl(c *caddy.Controller, name string, bootStrapDNS string, failOnHTTPError bool) ([]string, error) {
 	client := &http.Client{}
 	if bootStrapDNS != "" {
 		client = customDNS(bootStrapDNS)
@@ -33,6 +34,9 @@ func loadListFromUrl(c *caddy.Controller, name string, bootStrapDNS string) ([]s
 		return nil, err
 	}
 	defer response.Body.Close()
+	if failOnHTTPError && (response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices) {
+		return nil, fmt.Errorf("failed to load %s: HTTP %s", name, response.Status)
+	}
 	return collectDomains(response.Body, name)
 }
 
