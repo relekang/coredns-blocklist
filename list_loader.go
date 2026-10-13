@@ -112,10 +112,15 @@ func toMap(domains []string) map[string]bool {
 			log.Debugf("Filtered out comment '%s' from blocklist", line)
 			continue
 		}
-		line = inlineCommentRegex.ReplaceAllString(line, "")
-		line = strings.Replace(line, "0.0.0.0 ", "", 1)
-		line = strings.Replace(line, "127.0.0.1 ", "", 1)
-		if line == "" || line == "localhost" || strings.Contains(line, " ") {
+		fields := strings.Fields(inlineCommentRegex.ReplaceAllString(line, ""))
+		if len(fields) > 0 && (fields[0] == "0.0.0.0" || fields[0] == "127.0.0.1") {
+			fields = fields[1:]
+		}
+		if len(fields) != 1 {
+			continue
+		}
+		line = strings.ToLower(fields[0])
+		if line == "localhost" {
 			continue
 		}
 		log.Debugf("Loaded '%s' into blocklist", line)
