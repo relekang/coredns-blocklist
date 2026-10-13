@@ -27,6 +27,22 @@ domain on each line. There is an example file in the example folder.
 }
 ```
 
+### HTTP download failures
+
+By default, an HTTP response outside the 200–299 range stops startup with an
+error. This applies to both blocklist and allowlist downloads.
+
+To retain the previous behavior and read the response body regardless of the
+HTTP status, set `fail_on_http_error false`:
+
+```
+blocklist https://example.org/blocklist.txt {
+  fail_on_http_error false
+}
+```
+
+Network errors, list read errors, and file errors still stop startup.
+
 ## Installation
 
 There is multiple ways to add plugins in [coredns][], but no matter the

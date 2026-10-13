@@ -3,6 +3,7 @@ package blocklist
 import (
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/coredns/caddy"
 	"github.com/coredns/coredns/core/dnsserver"
@@ -16,6 +17,7 @@ func init() { plugin.Register("blocklist", setup) }
 func setup(c *caddy.Controller) error {
 	for c.Next() {
 		domainMetrics := false
+		failOnHTTPError := true
 		var blocklistLocation string
 		var allowlistLocation string
 		var allowlist []string
@@ -38,6 +40,16 @@ func setup(c *caddy.Controller) error {
 
 				allowlistLocation = remaining[0]
 				log.Debugf("Setting allowlist location to %s", allowlistLocation)
+			case "fail_on_http_error":
+				remaining := c.RemainingArgs()
+				if len(remaining) != 1 {
+					return plugin.Error("blocklist", errors.New("fail_on_http_error requires a single boolean argument."))
+				}
+				var err error
+				failOnHTTPError, err = strconv.ParseBool(remaining[0])
+				if err != nil {
+					return plugin.Error("blocklist", err)
+				}
 			case "domain_metrics":
 				domainMetrics = true
 			case "bootstrap_dns":
@@ -59,13 +71,13 @@ func setup(c *caddy.Controller) error {
 			return plugin.Error("blocklist", errors.New("To many arguments for blocklist."))
 		}
 
-		blocklist, err := loadList(c, blocklistLocation, bootStrapDNS)
+		blocklist, err := loadList(c, blocklistLocation, bootStrapDNS, failOnHTTPError)
 		if err != nil {
 			return plugin.Error("blocklist", err)
 		}
 
 		if allowlistLocation != "" {
-			allowlist, err = loadList(c, allowlistLocation, bootStrapDNS)
+			allowlist, err = loadList(c, allowlistLocation, bootStrapDNS, failOnHTTPError)
 			if err != nil {
 				return plugin.Error("blocklist", err)
 			}
