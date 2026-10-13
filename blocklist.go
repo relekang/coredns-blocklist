@@ -82,7 +82,7 @@ func (b Blocklist) ServeDNS(ctx context.Context, w dns.ResponseWriter, r *dns.Ms
 				state.RemoteAddr(),
 			)
 
-			return b.blockResponse, nil
+			return dns.RcodeSuccess, err
 		}
 	}
 

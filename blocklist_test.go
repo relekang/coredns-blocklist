@@ -6,6 +6,8 @@ import (
 	golog "log"
 	"testing"
 
+	"github.com/coredns/coredns/core/dnsserver"
+	"github.com/coredns/coredns/plugin"
 	"github.com/coredns/coredns/plugin/pkg/dnstest"
 	"github.com/coredns/coredns/plugin/test"
 	"github.com/stretchr/testify/assert"
@@ -222,6 +224,38 @@ func TestBlockedDomainWithNxdomain(t *testing.T) {
 	x.ServeDNS(ctx, rec, r)
 
 	assert.Equal(t, dns.RcodeNameError, rec.Rcode)
+}
+
+type countingResponseWriter struct {
+	dns.ResponseWriter
+	writes int
+}
+
+func (w *countingResponseWriter) WriteMsg(m *dns.Msg) error {
+	w.writes++
+	return w.ResponseWriter.WriteMsg(m)
+}
+
+func TestBlockedDomainWithRefusedSendsOneResponse(t *testing.T) {
+	cfg := &dnsserver.Config{Zone: "."}
+	cfg.AddPlugin(func(next plugin.Handler) plugin.Handler {
+		return NewBlocklistPlugin(next, []string{"bad.domain"}, nil, false, dns.RcodeRefused)
+	})
+
+	server, err := dnsserver.NewServer("127.0.0.1:0", []*dnsserver.Config{cfg})
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	r := new(dns.Msg)
+	r.SetQuestion("bad.domain.", dns.TypeA)
+	rec := dnstest.NewRecorder(&test.ResponseWriter{})
+	writer := &countingResponseWriter{ResponseWriter: rec}
+
+	server.ServeDNS(context.Background(), writer, r)
+
+	assert.Equal(t, 1, writer.writes)
+	assert.Equal(t, dns.RcodeRefused, rec.Rcode)
 }
 
 func TestBlockedDomainWithRefused(t *testing.T) {
