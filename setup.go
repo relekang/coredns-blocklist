@@ -53,7 +53,11 @@ func setup(c *caddy.Controller) error {
 			case "domain_metrics":
 				domainMetrics = true
 			case "bootstrap_dns":
-				bootStrapDNS = c.RemainingArgs()[0]
+				remaining := c.RemainingArgs()
+				if len(remaining) != 1 {
+					return plugin.Error("blocklist", errors.New("bootstrap_dns requires a single argument."))
+				}
+				bootStrapDNS = remaining[0]
 			case "block_response":
 				remaining := c.RemainingArgs()
 				if len(remaining) != 1 {
