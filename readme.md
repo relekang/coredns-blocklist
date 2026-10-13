@@ -41,7 +41,8 @@ blocklist https://example.org/blocklist.txt {
 }
 ```
 
-Network errors, list read errors, and file errors still stop startup.
+Network errors, list read errors, and file errors still stop startup. Each HTTP
+download has a 30-second timeout, including DNS lookup and response-body reads.
 
 ## Installation
 

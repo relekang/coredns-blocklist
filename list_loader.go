@@ -16,6 +16,8 @@ import (
 	"github.com/coredns/caddy"
 )
 
+const listDownloadTimeout = 30 * time.Second
+
 func loadList(c *caddy.Controller, location string, bootStrapDNS string, failOnHTTPError bool) ([]string, error) {
 	log.Infof("Loading from %s", location)
 	if strings.HasPrefix(location, "http://") || strings.HasPrefix(location, "https://") {
@@ -25,7 +27,7 @@ func loadList(c *caddy.Controller, location string, bootStrapDNS string, failOnH
 }
 
 func loadListFromUrl(c *caddy.Controller, name string, bootStrapDNS string, failOnHTTPError bool) ([]string, error) {
-	client := &http.Client{}
+	client := &http.Client{Timeout: listDownloadTimeout}
 	if bootStrapDNS != "" {
 		client = customDNS(bootStrapDNS)
 	}
@@ -67,7 +69,7 @@ func customDNS(bootStrapDNS string) *http.Client {
 		DisableCompression: true,
 		DialContext:        dialContext,
 	}
-	client := &http.Client{Transport: tr}
+	client := &http.Client{Transport: tr, Timeout: listDownloadTimeout}
 
 	return client
 }
