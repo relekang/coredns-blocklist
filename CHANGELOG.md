@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.5](https://github.com/relekang/coredns-blocklist/compare/v1.13.4...v1.13.5) (2026-10-14)
+
+
+### Bug Fixes
+
+* Disable incompatible Caddy major upgrades ([74336c1](https://github.com/relekang/coredns-blocklist/commit/74336c11897f2345caea25a3fd293d7d01695052))
+
 ## [1.13.4](https://github.com/relekang/coredns-blocklist/compare/v1.13.3...v1.13.4) (2026-10-13)
 
 
