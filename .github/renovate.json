@@ -13,6 +13,15 @@
   "minimumReleaseAge": "7 days",
   "packageRules": [
     {
+      "matchPackageNames": [
+        "github.com/coredns/caddy"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
+    },
+    {
       "matchUpdateTypes": [
         "major"
       ],
