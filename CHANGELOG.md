@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.6](https://github.com/relekang/coredns-blocklist/compare/v1.13.5...v1.13.6) (2026-10-15)
+
+
+### Bug Fixes
+
+* Upload release assets before publication ([57f407e](https://github.com/relekang/coredns-blocklist/commit/57f407e7f52fa8565ec30d1f06230eb0d7506777))
+
 ## [1.13.5](https://github.com/relekang/coredns-blocklist/compare/v1.13.4...v1.13.5) (2026-10-14)
 
 
