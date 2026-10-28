@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.7](https://github.com/relekang/coredns-blocklist/compare/v1.13.6...v1.13.7) (2026-10-28)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/coredns/coredns to v1.15.0 ([29dd3d1](https://github.com/relekang/coredns-blocklist/commit/29dd3d139acac460a4e2f3b637dee6a589e0a9b9))
+* **deps:** update module github.com/prometheus/client_golang to v1.25.0 ([6e621f9](https://github.com/relekang/coredns-blocklist/commit/6e621f9b4c02bac47b61fca69f4f58d01474179f))
+
 ## [1.13.6](https://github.com/relekang/coredns-blocklist/compare/v1.13.5...v1.13.6) (2026-10-15)
 
 
