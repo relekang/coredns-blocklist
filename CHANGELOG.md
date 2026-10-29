@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.8](https://github.com/relekang/coredns-blocklist/compare/v1.13.7...v1.13.8) (2026-10-29)
+
+
+### Bug Fixes
+
+* Prevent release version rollback ([d47a8ce](https://github.com/relekang/coredns-blocklist/commit/d47a8ce908d1fb6851583e946c3d9d6cf997961c))
+
 ## [1.13.7](https://github.com/relekang/coredns-blocklist/compare/v1.13.6...v1.13.7) (2026-10-28)
 
 
