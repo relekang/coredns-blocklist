@@ -1,6 +1,16 @@
 name: Build release
 
 on:
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: Existing draft release tag
+        required: true
+        type: string
+      sha:
+        description: Full commit SHA for the draft release
+        required: true
+        type: string
   workflow_call:
     inputs:
       tag_name:
@@ -57,9 +67,12 @@ jobs:
           path: artifacts
       - name: Upload assets and publish release
         run: |
+          test "$(gh release view "$TAG_NAME" --json isDraft --jq .isDraft)" = true
+          test "$(gh release view "$TAG_NAME" --json targetCommitish --jq .targetCommitish)" = "$RELEASE_SHA"
           gh release upload "$TAG_NAME" artifacts/*.zip --clobber
           gh release edit "$TAG_NAME" --draft=false
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           TAG_NAME: ${{ inputs.tag_name }}
+          RELEASE_SHA: ${{ inputs.sha }}

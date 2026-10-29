@@ -23,6 +23,7 @@ jobs:
         id: release
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
+          skip-github-pull-request: true
 
   release:
     needs: release-please
@@ -31,3 +32,24 @@ jobs:
     with:
       tag_name: ${{ needs.release-please.outputs.tag_name }}
       sha: ${{ needs.release-please.outputs.sha }}
+
+  release-pr:
+    needs: [release-please, release]
+    if: >-
+      always() &&
+      needs.release-please.result == 'success' &&
+      (needs.release-please.outputs.release_created != 'true' || needs.release.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the release tag
+        run: |
+          version=$(jq -r '.["."]' .release-please-manifest.json)
+          gh api "repos/$GH_REPO/git/ref/tags/v$version" --silent
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+      - uses: googleapis/release-please-action@v5
+        with:
+          token: ${{ secrets.RELEASE_TOKEN }}
+          skip-github-release: true
